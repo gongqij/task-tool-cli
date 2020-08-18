@@ -14,7 +14,7 @@ LDFLAGS += -X "$(project)/version.GitBranch=$(shell git rev-parse --abbrev-ref H
 build: $(TARGETS)
 
 $(TARGETS): $(SRC)
-	$(GO) build -ldflags '$(LDFLAGS)' $(project)/cmd/$@
+	$(GO) build -ldflags '$(LDFLAGS)' $(project)
 
 .PHONY: clean build
 

@@ -17,14 +17,28 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"task-tool-cli/client"
 )
 
-var cfgFile string
+var (
+	verbose   bool
+	cfgFile   string
+	accessKey string
+	secretKey string
+	endPoint  string
+	mgr       *client.Manager
+)
+
+const defaultEndPoint = "http://127.0.0.1:8081"
+const defaultAccessKey = "UzEatlPmdhdU9b3nSEp61I6Y"
+const defaultSecretKey = "Hwibpcoa9yaDBVuGU9kOEJo6"
+
+const defaultTimeout = client.DefaultTimeout
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -38,7 +52,8 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	/*	Run: func(cmd *cobra.Command, args []string) {
+		},*/
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -57,11 +72,14 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.task-tool-cli.yaml)")
-
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.task-tool-cli.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&endPoint, "endpoint", "e", defaultEndPoint, "HTTP endpoint for task-tool-cli")
+	rootCmd.PersistentFlags().StringVarP(&accessKey, "access_key", "a", defaultAccessKey, "JWT Access Key (optional)")
+	rootCmd.PersistentFlags().StringVarP(&secretKey, "secret_key", "s", defaultSecretKey, "JWT Secret Key (optional)")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.
