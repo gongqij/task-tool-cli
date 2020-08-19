@@ -18,71 +18,64 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"task-tool-cli/api"
 	"task-tool-cli/client"
 	"task-tool-cli/utils"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		opts := client.Options{
-			HTTPAuthFunc: utils.SetupAuth(accessKey, secretKey),
-		}
-		mgr = client.NewManager(endPoint, defaultTimeout, opts)
-		//fmt.Println(cmd.Flag("task_id").Value)
-		if cmd.Flag("task_id").Value.String() != "" {
-			err := mgr.GetTaskInfoById(cmd.Flag("task_id").Value.String())
-			if err != nil {
-				logrus.Fatal(err)
+func newListCmd() *cobra.Command {
+	// listCmd represents the list command
+	var listCmd = &cobra.Command{
+		Use:   "list",
+		Short: "show tasksInfo",
+		Run: func(cmd *cobra.Command, args []string) {
+			opts := client.Options{
+				HTTPAuthFunc: utils.SetupAuth(accessKey, secretKey),
 			}
-			return
-		}
-		if (len(args) > 0 && args[0] != "all") || cmd.Flag("object_type").Value.String() != "" {
+			mgr = client.NewManager(endPoint, defaultTimeout, opts)
+			//fmt.Println(cmd.Flag("task_id").Value)
+			if cmd.Flag("task_id").Value.String() != "" {
+				err := mgr.GetTaskInfoById(cmd.Flag("task_id").Value.String())
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				return
+			}
+			if (len(args) > 0 && args[0] != "all") || cmd.Flag("object_type").Value.String() != "" {
+				resp, err := mgr.ListAllTasks()
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				if len(args) > 0 {
+					utils.PrintResult(resp, args[0])
+					if !utils.IsObjectTypeExist(args[0]) {
+						err := mgr.GetTaskInfoById(args[0])
+						if err != nil {
+							logrus.Fatal(err)
+						}
+					}
+				} else {
+					utils.PrintResult(resp, cmd.Flag("object_type").Value.String())
+				}
+				return
+			}
 			resp, err := mgr.ListAllTasks()
 			if err != nil {
 				logrus.Fatal(err)
 			}
-			if len(args) > 0 {
-				utils.PrintResult(resp, args[0])
-				if !utils.IsObjectTypeExist(args[0]) {
-					err := mgr.GetTaskInfoById(args[0])
-					if err != nil {
-						logrus.Fatal(err)
-					}
-				}
-			} else {
-				utils.PrintResult(resp, cmd.Flag("object_type").Value.String())
-			}
-			return
-		}
-		resp, err := mgr.ListAllTasks()
-		if err != nil {
-			logrus.Fatal(err)
-		}
-		utils.PrintResult(resp, "")
-	},
-}
+			utils.PrintResult(resp, "")
+		},
+		ValidArgs: []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()},
+	}
 
-func init() {
-	rootCmd.AddCommand(listCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	//listCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	listCmd.Flags().StringP("task_id", "t", "", "optional, -task_id xxx -t xxx  get taskInfo by taskID")
-	listCmd.Flags().StringP("object_type", "o", "", "optional, -object_type xxx -o xxx get tasks by objectType")
+	listCmd.Flags().StringP("task_id", "t", "", "optional, --task_id xxx -t xxx  get taskInfo by taskID")
+	listCmd.Flags().StringP("object_type", "o", "", "optional, --object_type xxx -o xxx get tasks by objectType")
+	flagName := "object_type"
+	err := listCmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()}, cobra.ShellCompDirectiveDefault
+	})
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	return listCmd
 }

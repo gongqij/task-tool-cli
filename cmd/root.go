@@ -16,18 +16,12 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-	"os"
-
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"task-tool-cli/client"
 )
 
 var (
-	verbose   bool
-	cfgFile   string
 	accessKey string
 	secretKey string
 	endPoint  string
@@ -40,70 +34,56 @@ const defaultSecretKey = "Hwibpcoa9yaDBVuGU9kOEJo6"
 
 const defaultTimeout = client.DefaultTimeout
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "task-tool-cli",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+var globalUsage = `The task tool cli
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	/*	Run: func(cmd *cobra.Command, args []string) {
-		},*/
-}
+Common actions for Helm:
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
+- task-tool-cli add - add tasks
+- task-tool-cli delete - delete tasks
+- task-tool-cli list - show tasksInfo
+- task-tool-cli version - show task-tool-cli version info
+`
 
-func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.task-tool-cli.yaml)")
-	rootCmd.PersistentFlags().StringVarP(&endPoint, "endpoint", "e", defaultEndPoint, "HTTP endpoint for task-tool-cli")
-	rootCmd.PersistentFlags().StringVarP(&accessKey, "access_key", "a", defaultAccessKey, "JWT Access Key (optional)")
-	rootCmd.PersistentFlags().StringVarP(&secretKey, "secret_key", "s", defaultSecretKey, "JWT Secret Key (optional)")
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	//rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".task-tool-cli" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".task-tool-cli")
+func NewRootCmd() (*cobra.Command, error) {
+	cmd := &cobra.Command{
+		Use:          "task-tool-cli",
+		Short:        "The Helm package manager for Kubernetes.",
+		Long:         globalUsage,
+		SilenceUsage: true,
+		// This breaks completion for 'helm help <TAB>'
+		// The Cobra release following 1.0 will fix this
+		//ValidArgsFunction: noCompletions, // Disable file completion
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	//设置全局参数
+	cmd.PersistentFlags().StringVarP(&endPoint, "endpoint", "e", defaultEndPoint, "HTTP endpoint for task-tool-cli")
+	cmd.PersistentFlags().StringVarP(&accessKey, "access_key", "a", defaultAccessKey, "JWT Access Key (optional)")
+	cmd.PersistentFlags().StringVarP(&secretKey, "secret_key", "s", defaultSecretKey, "JWT Secret Key (optional)")
+	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
+	//Setup shell completion for the access_key flag
+	flagName1 := "access_key"
+	err := cmd.RegisterFlagCompletionFunc(flagName1, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{defaultAccessKey}, cobra.ShellCompDirectiveNoFileComp
+	})
+	if err != nil {
+		logrus.Fatal(err)
 	}
+
+	flagName2 := "secret_key"
+	err = cmd.RegisterFlagCompletionFunc(flagName2, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{defaultSecretKey}, cobra.ShellCompDirectiveNoFileComp
+	})
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	// Add subcommands
+	cmd.AddCommand(
+		// chart commands
+		newListCmd(),
+		newDeleteCmd(),
+		newAddCmd(),
+		newCompletionCmd(),
+		newVersionCmd(),
+	)
+	return cmd, nil
 }

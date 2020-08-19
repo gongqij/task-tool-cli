@@ -18,81 +18,72 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"task-tool-cli/api"
 	"task-tool-cli/client"
 	"task-tool-cli/utils"
 )
 
-// deleteCmd represents the delete command
-var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		opts := client.Options{
-			HTTPAuthFunc: utils.SetupAuth(accessKey, secretKey),
-		}
-		mgr = client.NewManager(endPoint, defaultTimeout, opts)
-		//fmt.Println(cmd.Flag("task_id").Value)
-		if cmd.Flag("task_id").Value.String() != "" {
-			err := mgr.DeleteTaskById(cmd.Flag("task_id").Value.String())
-			if err != nil {
-				logrus.Fatal(err)
+func newDeleteCmd() *cobra.Command {
+	var deleteCmd = &cobra.Command{
+		Use:   "delete",
+		Short: "delete tasks",
+		Run: func(cmd *cobra.Command, args []string) {
+			opts := client.Options{
+				HTTPAuthFunc: utils.SetupAuth(accessKey, secretKey),
 			}
-			return
-		}
-		//在delete命令后直接输入objectType或-object_type xxx,都可以直接删除该类型所有任务
-		if (len(args) > 0 && args[0] != "all") || cmd.Flag("object_type").Value.String() != "" {
-			if len(args) > 0 {
-				for _, arg := range args {
-					if utils.IsObjectTypeExist(arg) {
-						err := mgr.DeleteTaskByObjectType(arg)
-						if err != nil {
-							logrus.Warnln(err)
-						}
-					} else {
-						err := mgr.DeleteTaskById(arg)
-						if err != nil {
-							logrus.Warnln(err)
+			mgr = client.NewManager(endPoint, defaultTimeout, opts)
+			//fmt.Println(cmd.Flag("task_id").Value)
+			if cmd.Flag("task_id").Value.String() != "" {
+				err := mgr.DeleteTaskById(cmd.Flag("task_id").Value.String())
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				return
+			}
+			//在delete命令后直接输入objectType或-object_type xxx,都可以直接删除该类型所有任务
+			if (len(args) > 0 && args[0] != "all") || cmd.Flag("object_type").Value.String() != "" {
+				if len(args) > 0 {
+					for _, arg := range args {
+						if utils.IsObjectTypeExist(arg) {
+							err := mgr.DeleteTaskByObjectType(arg)
+							if err != nil {
+								logrus.Warnln(err)
+							}
+						} else {
+							err := mgr.DeleteTaskById(arg)
+							if err != nil {
+								logrus.Warnln(err)
+							}
 						}
 					}
+				} else {
+					err := mgr.DeleteTaskByObjectType(cmd.Flag("object_type").Value.String())
+					if err != nil {
+						logrus.Warnln(err)
+					}
 				}
-			} else {
-				err := mgr.DeleteTaskByObjectType(cmd.Flag("object_type").Value.String())
+				return
+			}
+			if len(args) > 0 && args[0] == "all" {
+				err := mgr.DeleteAllTasks()
 				if err != nil {
-					logrus.Warnln(err)
+					logrus.Fatal(err)
 				}
+				return
 			}
-			return
-		}
-		if len(args) > 0 && args[0] == "all" {
-			err := mgr.DeleteAllTasks()
-			if err != nil {
-				logrus.Fatal(err)
-			}
-			return
-		}
-		logrus.Warnln("请指定参数！！！")
-		_ = cmd.Help()
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(deleteCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	deleteCmd.Flags().StringP("task_id", "t", "", "optional, -task_id xxx -t xxx  delete task by taskID")
-	deleteCmd.Flags().StringP("object_type", "o", "", "optional, -object_type xxx -o xxx delete tasks by objectType")
+			logrus.Warnln("请指定参数！！！")
+			_ = cmd.Help()
+		},
+		ValidArgs: []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()},
+	}
+	deleteCmd.Flags().StringP("task_id", "t", "", "optional, --task_id xxx -t xxx  delete task by taskID")
+	deleteCmd.Flags().StringP("object_type", "o", "", "optional, --object_type xxx -o xxx delete tasks by objectType")
+	flagName := "object_type"
+	err := deleteCmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()}, cobra.ShellCompDirectiveDefault
+	})
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	return deleteCmd
 }
