@@ -75,3 +75,8 @@ $ yourprogram completion fish > ~/.config/fish/completions/yourprogram.fish
 func newCompletionCmd() *cobra.Command {
 	return completionCmd
 }
+
+// Function to disable file completion
+func noCompletions(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}

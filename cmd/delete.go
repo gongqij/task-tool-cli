@@ -25,9 +25,11 @@ import (
 
 func newDeleteCmd() *cobra.Command {
 	var deleteCmd = &cobra.Command{
-		Use:   "delete",
-		Short: "delete tasks",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:               "delete OBJECT_TYPE[all(全部删除),taskID(可以指定多个taskID)]",
+		Aliases:           []string{"del", "remove", "rm"},
+		SuggestFor:        []string{"un"},
+		ValidArgsFunction: noCompletions,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := client.Options{
 				HTTPAuthFunc: utils.SetupAuth(accessKey, secretKey),
 			}
@@ -36,9 +38,9 @@ func newDeleteCmd() *cobra.Command {
 			if cmd.Flag("task_id").Value.String() != "" {
 				err := mgr.DeleteTaskById(cmd.Flag("task_id").Value.String())
 				if err != nil {
-					logrus.Fatal(err)
+					return err
 				}
-				return
+				return nil
 			}
 			//在delete命令后直接输入objectType或-object_type xxx,都可以直接删除该类型所有任务
 			if (len(args) > 0 && args[0] != "all") || cmd.Flag("object_type").Value.String() != "" {
@@ -62,19 +64,20 @@ func newDeleteCmd() *cobra.Command {
 						logrus.Warnln(err)
 					}
 				}
-				return
+				return nil
 			}
 			if len(args) > 0 && args[0] == "all" {
 				err := mgr.DeleteAllTasks()
 				if err != nil {
-					logrus.Fatal(err)
+					return err
 				}
-				return
+				return nil
 			}
 			logrus.Warnln("请指定参数！！！")
 			_ = cmd.Help()
+			return nil
 		},
-		ValidArgs: []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()},
+		ValidArgs: []string{"all", api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()},
 	}
 	deleteCmd.Flags().StringP("task_id", "t", "", "optional, --task_id xxx -t xxx  delete task by taskID")
 	deleteCmd.Flags().StringP("object_type", "o", "", "optional, --object_type xxx -o xxx delete tasks by objectType")

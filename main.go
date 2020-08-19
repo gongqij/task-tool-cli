@@ -16,7 +16,6 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"os"
 	"task-tool-cli/cmd"
@@ -29,7 +28,6 @@ func main() {
 		os.Exit(1)
 	}
 	if err := cmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }

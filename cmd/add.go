@@ -27,9 +27,10 @@ import (
 func newAddCmd() *cobra.Command {
 	// addCmd represents the add command
 	var addCmd = &cobra.Command{
-		Use:   "add",
-		Short: "add tasks",
-		Run: func(cmd *cobra.Command, args []string) {
+		Use:               "add",
+		Short:             "add tasks",
+		ValidArgsFunction: noCompletions,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := client.Options{
 				HTTPAuthFunc: utils.SetupAuth(accessKey, secretKey),
 			}
@@ -37,15 +38,15 @@ func newAddCmd() *cobra.Command {
 			if cmd.Flag("num").Value.String() == "" || cmd.Flag("rtsp").Value.String() == "" || cmd.Flag("object_type").Value.String() == "" {
 				logrus.Warnln("请指定任务数、任务类型和rtsp源")
 				_ = cmd.Help()
-				return
+				return nil
 			}
 			num, _ := strconv.Atoi(cmd.Flag("num").Value.String())
 			err := mgr.AddTasks(num, cmd.Flag("object_type").Value.String(), cmd.Flag("rtsp").Value.String(), cmd.Flag("minio_key").Value.String())
 			if err != nil {
-				logrus.Fatal(err)
+				return err
 			}
 			logrus.Println("添加任务成功！！！")
-
+			return nil
 		},
 	}
 	addCmd.Flags().StringP("num", "n", "", "required, -num xxx -n xxx task number")

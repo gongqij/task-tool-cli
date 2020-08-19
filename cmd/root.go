@@ -36,7 +36,7 @@ const defaultTimeout = client.DefaultTimeout
 
 var globalUsage = `The task tool cli
 
-Common actions for Helm:
+Common actions for task tool cli:
 
 - task-tool-cli add - add tasks
 - task-tool-cli delete - delete tasks

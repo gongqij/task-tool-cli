@@ -25,10 +25,12 @@ import (
 
 func newListCmd() *cobra.Command {
 	// listCmd represents the list command
-	var listCmd = &cobra.Command{
-		Use:   "list",
-		Short: "show tasksInfo",
-		Run: func(cmd *cobra.Command, args []string) {
+	listCmd := &cobra.Command{
+		Use:               "list OBJECT_TYPE[all(获取全部任务),taskID(获取任务详细信息)",
+		Short:             "show tasksInfo",
+		Aliases:           []string{"show", "get", "ls", "info"},
+		ValidArgsFunction: noCompletions,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := client.Options{
 				HTTPAuthFunc: utils.SetupAuth(accessKey, secretKey),
 			}
@@ -37,35 +39,35 @@ func newListCmd() *cobra.Command {
 			if cmd.Flag("task_id").Value.String() != "" {
 				err := mgr.GetTaskInfoById(cmd.Flag("task_id").Value.String())
 				if err != nil {
-					logrus.Fatal(err)
+					return err
 				}
-				return
 			}
 			if (len(args) > 0 && args[0] != "all") || cmd.Flag("object_type").Value.String() != "" {
 				resp, err := mgr.ListAllTasks()
 				if err != nil {
-					logrus.Fatal(err)
+					return err
 				}
 				if len(args) > 0 {
 					utils.PrintResult(resp, args[0])
 					if !utils.IsObjectTypeExist(args[0]) {
 						err := mgr.GetTaskInfoById(args[0])
 						if err != nil {
-							logrus.Fatal(err)
+							return err
 						}
 					}
 				} else {
 					utils.PrintResult(resp, cmd.Flag("object_type").Value.String())
 				}
-				return
+				return nil
 			}
 			resp, err := mgr.ListAllTasks()
 			if err != nil {
-				logrus.Fatal(err)
+				return err
 			}
 			utils.PrintResult(resp, "")
+			return nil
 		},
-		ValidArgs: []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()},
+		ValidArgs: []string{"all", api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()},
 	}
 
 	listCmd.Flags().StringP("task_id", "t", "", "optional, --task_id xxx -t xxx  get taskInfo by taskID")
