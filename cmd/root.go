@@ -1,18 +1,3 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
@@ -27,7 +12,10 @@ var (
 	endPoint  string
 	mgr       *client.Manager
 )
+var defaultRtspSourceForCompletion = []string{"rtsp://10.4.176.152:5454", "rtsp://10.4.176.227:5454", "rtsp://10.4.196.29:5454"}
 
+const defaultEndPoint91 = "https://10.4.192.91:30443/engine/video-process"
+const defaultEndPoint92 = "https://10.4.192.92:30443/engine/video-process"
 const defaultEndPoint = "http://127.0.0.1:8081"
 const defaultAccessKey = "UzEatlPmdhdU9b3nSEp61I6Y"
 const defaultSecretKey = "Hwibpcoa9yaDBVuGU9kOEJo6"
@@ -52,7 +40,7 @@ func NewRootCmd() (*cobra.Command, error) {
 		SilenceUsage: true,
 		// This breaks completion for 'helm help <TAB>'
 		// The Cobra release following 1.0 will fix this
-		//ValidArgsFunction: noCompletions, // Disable file completion
+		ValidArgsFunction: noCompletions, // Disable file completion
 	}
 
 	//设置全局参数
@@ -72,6 +60,13 @@ func NewRootCmd() (*cobra.Command, error) {
 	flagName2 := "secret_key"
 	err = cmd.RegisterFlagCompletionFunc(flagName2, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{defaultSecretKey}, cobra.ShellCompDirectiveNoFileComp
+	})
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	flagName3 := "endpoint"
+	err = cmd.RegisterFlagCompletionFunc(flagName3, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{defaultEndPoint92, defaultEndPoint91}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		logrus.Fatal(err)

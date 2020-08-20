@@ -1,25 +1,9 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"strconv"
-	"task-tool-cli/api"
 	"task-tool-cli/client"
 	"task-tool-cli/utils"
 )
@@ -57,9 +41,14 @@ func newAddCmd() *cobra.Command {
 	addCmd.MarkFlagRequired("object_type")
 	addCmd.MarkFlagRequired("rtsp")
 
-	flagName := "object_type"
-	err := addCmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()}, cobra.ShellCompDirectiveDefault
+	err := addCmd.RegisterFlagCompletionFunc("object_type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return utils.AllObjectType(), cobra.ShellCompDirectiveNoFileComp
+	})
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	err = addCmd.RegisterFlagCompletionFunc("rtsp", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return defaultRtspSourceForCompletion, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		logrus.Fatal(err)
