@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"task-tool-cli/api"
 	"task-tool-cli/client"
 	"task-tool-cli/utils"
 )
@@ -69,7 +68,7 @@ func newDeleteCmd() *cobra.Command {
 	deleteCmd.Flags().StringP("object_type", "o", "", "optional, --object_type xxx -o xxx delete tasks by objectType")
 	flagName := "object_type"
 	err := deleteCmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{api.ObjectType_OBJECT_TRAFFIC_ANOMALY_EVENT.String(), api.ObjectType_OBJECT_TRAFFIC_MULTI_PACH.String(), api.ObjectType_OBJECT_TRAFFIC_AUTOMOBILE_COUNT.String(), api.ObjectType_OBJECT_TRAFFIC_CAMERA_VISION_INFO.String()}, cobra.ShellCompDirectiveDefault
+		return utils.AllObjectType(), cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		logrus.Fatal(err)

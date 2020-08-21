@@ -11,12 +11,27 @@ LDFLAGS += -X "$(project)/version.GitHash=$(shell git rev-parse HEAD)"
 LDFLAGS += -X "$(project)/version.Version=$(VERSION)"
 LDFLAGS += -X "$(project)/version.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
 
+all: build
+
 build: $(TARGETS)
 
 $(TARGETS): $(SRC)
 	$(GO) build -ldflags '$(LDFLAGS)' $(project)
 
-.PHONY: clean build
+.PHONY: all clean build  bash_completion
 
 clean:
 	rm -f $(TARGETS)
+
+###zsh_completion:
+###	$(call completion,"zsh",$(zshCompletionPath)/_task-tool-cli)
+
+bash_completion:
+	$(call completion,"bash","/etc/bash_completion.d/task-tool-cli")
+
+############### functions ###############Day
+define completion
+	@echo "$(1) completion $(2)..."
+    @./task-tool-cli completion $(1) > $(2)
+    @echo "done"
+endef
