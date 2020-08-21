@@ -35,7 +35,6 @@ Common actions for task tool cli:
 func NewRootCmd() (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Use:          "task-tool-cli",
-		Short:        "The Helm package manager for Kubernetes.",
 		Long:         globalUsage,
 		SilenceUsage: true,
 		// This breaks completion for 'helm help <TAB>'

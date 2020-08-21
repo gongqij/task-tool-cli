@@ -12,6 +12,7 @@ func main() {
 		logrus.Debug(err)
 		os.Exit(1)
 	}
+	//doc.GenMarkdownTree(cmd,"./doc")
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
